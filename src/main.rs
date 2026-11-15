@@ -1,3 +1,5 @@
+#[cfg(test)] mod test;
+
 use rand::{rngs::StdRng, RngExt, SeedableRng};
 use std::collections::VecDeque;
 
@@ -6,7 +8,7 @@ fn new_rng() -> impl Iterator<Item = u8> {
     std::iter::repeat_with(move || rng.random::<u8>())
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct BabelEncoding{
     index: u128,
     length: usize,
@@ -22,12 +24,13 @@ impl BabelEncoding {
         let mut window: VecDeque<u8> = stream.by_ref().take(length).collect();
 
         for byte in stream {
-            window.pop_front();
-            window.push_back(byte);
 
             if data.iter().eq(window.iter()) {
                 break;
             }
+            window.pop_front();
+            window.push_back(byte);
+
             index += 1;
         }
 
@@ -39,7 +42,7 @@ impl BabelEncoding {
 
     fn decode(self) -> Vec<u8> {
         let mut stream = new_rng();
-        let mut i = self.index + 1;
+        let mut i = self.index;
 
         while i > 0 {
             stream.next();
@@ -50,7 +53,7 @@ impl BabelEncoding {
 }
 
 fn main() {
-    let bytes: Vec<u8> = vec![12, 13, 14, 15, 16];
+    let bytes: Vec<u8> = vec![12, 13, 14, 15];
     println!("Input: {:?}", bytes);
 
     let encoding = BabelEncoding::from_bytes(&bytes);
